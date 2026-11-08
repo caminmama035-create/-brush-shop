@@ -228,10 +228,15 @@ function shopV(){
  if(!S.products.length)return '<div class="box c empty">'+stk("box")+'<p>ยังไม่มีสินค้า</p></div>';
  var g=S.layout==="grid";
  var bar='<div class="lay" role="group" aria-label="รูปแบบการแสดงผล"><button data-lay="list" aria-pressed="'+(!g)+'">เรียงยาว</button><button data-lay="grid" aria-pressed="'+g+'">เรียงคู่</button></div>';
- var cards=S.products.filter(function(p){return p.active}).map(function(p,ix){
+ var cards=S.products.filter(function(p){return p.active&&(!S.art||(p.artist||"")===S.art)}).map(function(p,ix){
   var pv=(p.preview_url&&p.preview_url.indexOf("http")===0)?'<a class="pv" href="'+esc(p.preview_url)+'" target="_blank" rel="noopener">ดูรูปตัวอย่างเพิ่มเติม ↗</a>':"";
-  return '<div class="item" style="--i:'+(ix+1)+'">'+(p.image_url?'<img class="cover" loading="lazy" src="'+esc(p.image_url)+'" alt="'+esc(p.name)+'">':'')+'<div class="in"><h3>'+esc(p.name)+'</h3><div class="mute">'+esc(p.description)+'</div>'+pv+'<div class="row" style="border:0;padding-top:10px"><span><span class="price">฿'+p.price+'</span>'+(p.sold>0?' <span class="mute">· ขายแล้ว '+p.sold+' ชิ้น</span>':'')+'</span><button class="btn" data-add="'+p.id+'">ใส่ตะกร้า</button></div></div></div>'}).join("");
- return '<div class="hero"><h2>ยินดีต้อนรับสู่ แมวดำตัวอ้วน</h2><p>'+(HALLOWEEN?'Happy Halloween 🎃 บรัชวาดภาพคัดมาให้สายวาด':'บรัชวาดภาพคัดมาให้สายวาด เลือกได้เลย 🐾')+'</p>'+(HALLOWEEN?stk("chibi","hst hch")+stk("brushcat","hst"):stk("brushcat","hst"))+stk(HALLOWEEN?"hghost":"yarn","crab")+'</div>'+bar+'<div class="'+(g?"grid":"")+'">'+cards+'</div>';
+  return '<div class="item" style="--i:'+(ix+1)+'">'+(p.image_url?'<img class="cover" loading="lazy" src="'+esc(p.image_url)+'" alt="'+esc(p.name)+'">':'')+'<div class="in"><h3>'+esc(p.name)+'</h3>'+(p.artist?'<div class="mute" style="font-size:.85em">นักวาด: '+esc(p.artist)+'</div>':'')+'<div class="mute">'+esc(p.description)+'</div>'+pv+'<div class="row" style="border:0;padding-top:10px"><span><span class="price">฿'+p.price+'</span>'+(p.sold>0?' <span class="mute">· ขายแล้ว '+p.sold+' ชิ้น</span>':'')+'</span><button class="btn" data-add="'+p.id+'">ใส่ตะกร้า</button></div></div></div>'}).join("");
+ return '<div class="hero"><h2>ยินดีต้อนรับสู่ แมวดำตัวอ้วน</h2><p>'+(HALLOWEEN?'Happy Halloween 🎃 บรัชวาดภาพคัดมาให้สายวาด':'บรัชวาดภาพคัดมาให้สายวาด เลือกได้เลย 🐾')+'</p>'+(HALLOWEEN?stk("chibi","hst hch")+stk("brushcat","hst"):stk("brushcat","hst"))+stk(HALLOWEEN?"hghost":"yarn","crab")+'</div>'+artBarV()+bar+'<div class="'+(g?"grid":"")+'">'+cards+'</div>';
+}
+function artBarV(){
+ var arts=[];S.products.forEach(function(p){if(p.active&&p.artist&&arts.indexOf(p.artist)<0)arts.push(p.artist)});
+ if(!arts.length)return "";
+ return '<div class="lay" role="group" aria-label="เลือกนักวาด"><button data-art="" aria-pressed="'+(!S.art)+'">ทั้งหมด</button>'+arts.map(function(a){return '<button data-art="'+esc(a)+'" aria-pressed="'+(S.art===a)+'">'+esc(a)+'</button>'}).join("")+'</div>';
 }
 function cartV(){
  if(!S.cart.length)return '<div class="box c empty">'+stk("peek")+'<p>ตะกร้ายังว่างอยู่</p><button class="btn" data-t2="shop">เลือกสินค้า</button></div>';
@@ -261,11 +266,11 @@ function adminV(){
 }
 function editV(){
  var p=S.products.filter(function(x){return x.id===S.edit})[0];if(!p){S.edit=null;return manageV()}
- return '<div class="box"><h2>แก้ไขสินค้า</h2>'+(p.image_url?'<img class="cover" style="border-radius:12px;margin-bottom:10px" src="'+esc(p.image_url)+'" alt="">':'')+'<label for="en">ชื่อสินค้า</label><input id="en" value="'+esc(p.name)+'"><label for="ed">คำอธิบาย</label><textarea id="ed" rows="4">'+esc(p.description)+'</textarea><label for="ep">ราคา (บาท)</label><input id="ep" type="number" inputmode="numeric" value="'+p.price+'"><label for="ev">ลิงก์ไดร์ฟรูปตัวอย่าง (ไม่บังคับ ลูกค้าเห็นได้ทุกคน)</label><input id="ev" type="url" value="'+esc(p.preview_url||"")+'"><label for="el">ลิงก์ไดร์ฟของไฟล์สินค้า (ส่งให้เฉพาะคนที่จ่ายแล้ว)</label><input id="el" type="url" value="'+esc(S.links[p.id]||"")+'"><label for="ei">เปลี่ยนรูปปก (ไม่บังคับ)</label><input id="ei" type="file" accept="image/*"><button class="btn" id="es">บันทึก</button> <button class="btn ghost" id="ec">ยกเลิก</button></div>';
+ return '<div class="box"><h2>แก้ไขสินค้า</h2>'+(p.image_url?'<img class="cover" style="border-radius:12px;margin-bottom:10px" src="'+esc(p.image_url)+'" alt="">':'')+'<label for="en">ชื่อสินค้า</label><input id="en" value="'+esc(p.name)+'"><label for="ed">คำอธิบาย</label><textarea id="ed" rows="4">'+esc(p.description)+'</textarea><label for="ep">ราคา (บาท)</label><input id="ep" type="number" inputmode="numeric" value="'+p.price+'"><label for="ev">ลิงก์ไดร์ฟรูปตัวอย่าง (ไม่บังคับ ลูกค้าเห็นได้ทุกคน)</label><input id="ev" type="url" value="'+esc(p.preview_url||"")+'"><label for="el">ลิงก์ไดร์ฟของไฟล์สินค้า (ส่งให้เฉพาะคนที่จ่ายแล้ว)</label><input id="el" type="url" value="'+esc(S.links[p.id]||"")+'"><label for="er">ชื่อนักวาด (ไม่บังคับ ใช้แยกหมวดสินค้า)</label><input id="er" value="'+esc(p.artist||"")+'"><label for="ei">เปลี่ยนรูปปก (ไม่บังคับ)</label><input id="ei" type="file" accept="image/*"><button class="btn" id="es">บันทึก</button> <button class="btn ghost" id="ec">ยกเลิก</button></div>';
 }
 function manageV(){
  if(S.edit)return editV();
- var f='<div class="box"><h2>เพิ่มสินค้า</h2><label for="pn">ชื่อสินค้า</label><input id="pn"><label for="pd">คำอธิบาย</label><textarea id="pd" rows="3"></textarea><label for="pp">ราคา (บาท)</label><input id="pp" type="number" inputmode="numeric"><label for="pi">รูปปกสินค้า (ไม่บังคับ)</label><input id="pi" type="file" accept="image/*"><label for="pv">ลิงก์ไดร์ฟรูปตัวอย่าง (ไม่บังคับ ลูกค้าเห็นได้ทุกคน)</label><input id="pv" type="url" placeholder="https://drive.google.com/..."><label for="pl">ลิงก์ไดร์ฟของไฟล์สินค้า (ส่งให้เฉพาะคนที่จ่ายแล้ว)</label><input id="pl" type="url" placeholder="https://drive.google.com/..."><button class="btn" id="pa">บันทึกสินค้า</button></div>';
+ var f='<div class="box"><h2>เพิ่มสินค้า</h2><label for="pn">ชื่อสินค้า</label><input id="pn"><label for="pd">คำอธิบาย</label><textarea id="pd" rows="3"></textarea><label for="pp">ราคา (บาท)</label><input id="pp" type="number" inputmode="numeric"><label for="pr">ชื่อนักวาด (ไม่บังคับ ใช้แยกหมวดสินค้า)</label><input id="pr" placeholder="เช่น mochatutumomo"><label for="pi">รูปปกสินค้า (ไม่บังคับ)</label><input id="pi" type="file" accept="image/*"><label for="pv">ลิงก์ไดร์ฟรูปตัวอย่าง (ไม่บังคับ ลูกค้าเห็นได้ทุกคน)</label><input id="pv" type="url" placeholder="https://drive.google.com/..."><label for="pl">ลิงก์ไดร์ฟของไฟล์สินค้า (ส่งให้เฉพาะคนที่จ่ายแล้ว)</label><input id="pl" type="url" placeholder="https://drive.google.com/..."><button class="btn" id="pa">บันทึกสินค้า</button></div>';
  var l=S.products.map(function(p){return '<div class="row"><span>'+esc(p.name)+' ฿'+p.price+(p.active?"":' <span class="tag b">ซ่อนอยู่</span>')+'</span><span><button class="btn ghost" data-ed="'+p.id+'">แก้ไข</button> <button class="btn ghost" data-cv="'+p.id+'">รูปปก</button> <button class="btn ghost" data-tg="'+p.id+'">'+(p.active?"ซ่อน":"แสดง")+'</button></span></div>'}).join("");
  return f+'<input id="cvf" type="file" accept="image/*" hidden><div class="box"><h2>สินค้าทั้งหมด</h2>'+(l||'<p class="mute">ยังไม่มีสินค้า</p>')+'</div>';
 }
@@ -280,6 +285,7 @@ function bindMain(){
   if(d.slip){var r=await sb.storage.from("slips").createSignedUrl(d.slip,300);if(r.data)window.open(r.data.signedUrl,"_blank");else toast("เปิดสลิปไม่ได้")}
   if(d.ok||d.no){var r2=await sb.from("orders").update({status:d.ok?"approved":"rejected"}).eq("id",d.ok||d.no);if(r2.error)toast("บันทึกไม่สำเร็จ: "+r2.error.message);else{toast(d.ok?"อนุมัติแล้ว ลูกค้าจะเห็นลิงก์ไฟล์":"บันทึกแล้ว");if(d.ok)confetti();go("admin")}}
   if(d.cp){try{navigator.clipboard.writeText(d.cp);toast("คัดลอกอีเมลแล้ว")}catch(e){toast(d.cp)}return}
+  if(e.target.hasAttribute("data-art")){S.art=d.art;render();return}
   if(d.lay){S.layout=d.lay;try{localStorage.setItem("layout",d.lay)}catch(e){}render();return}
   if(d.rg){S.range=d.rg;render();return}
   if(d.ed){S.edit=d.ed;render();window.scrollTo(0,0)}
@@ -317,7 +323,7 @@ async function addProduct(){
  var pvu=$("#pv").value.trim();if(pvu&&pvu.indexOf("http")!==0){toast("ลิงก์รูปตัวอย่างต้องขึ้นต้นด้วย http");return}
  var imgUrl=null,pf=$("#pi").files[0];
  if(pf){var ex=(pf.name.split(".").pop()||"jpg").replace(/[^a-z0-9]/gi,"").toLowerCase()||"jpg";var cp=Date.now()+"."+ex;var up=await sb.storage.from("covers").upload(cp,pf);if(up.error){toast("อัปโหลดรูปไม่สำเร็จ: "+up.error.message);return}imgUrl=sb.storage.from("covers").getPublicUrl(cp).data.publicUrl}
- var r=await sb.from("products").insert({name:n,description:d,price:p,image_url:imgUrl,preview_url:pvu||null}).select().single();
+ var r=await sb.from("products").insert({name:n,description:d,price:p,image_url:imgUrl,preview_url:pvu||null,artist:$("#pr").value.trim()||null}).select().single();
  if(r.error){toast("บันทึกไม่สำเร็จ: "+r.error.message);return}
  var r2=await sb.from("product_files").insert({product_id:r.data.id,drive_url:l});
  if(r2.error){toast("บันทึกลิงก์ไม่สำเร็จ: "+r2.error.message);return}
@@ -327,7 +333,7 @@ async function saveEdit(){
  var id=S.edit,n=$("#en").value.trim(),d=$("#ed").value.trim(),p=parseInt($("#ep").value,10),l=$("#el").value.trim();
  if(!n||!(p>0)||l.indexOf("http")!==0){toast("กรอกชื่อ ราคา และลิงก์ให้ครบ");return}
  var evu=$("#ev").value.trim();if(evu&&evu.indexOf("http")!==0){toast("ลิงก์รูปตัวอย่างต้องขึ้นต้นด้วย http");return}
- var upd={name:n,description:d,price:p,preview_url:evu||null},pf=$("#ei").files[0];
+ var upd={name:n,description:d,price:p,preview_url:evu||null,artist:$("#er").value.trim()||null},pf=$("#ei").files[0];
  if(pf){var ex=(pf.name.split(".").pop()||"jpg").replace(/[^a-z0-9]/gi,"").toLowerCase()||"jpg";var cp=Date.now()+"."+ex;var up=await sb.storage.from("covers").upload(cp,pf);if(up.error){toast("อัปโหลดรูปไม่สำเร็จ: "+up.error.message);return}upd.image_url=sb.storage.from("covers").getPublicUrl(cp).data.publicUrl}
  var r=await sb.from("products").update(upd).eq("id",id);
  if(r.error){toast("บันทึกไม่สำเร็จ: "+r.error.message);return}
